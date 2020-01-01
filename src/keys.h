@@ -1,3 +1,5 @@
+#pragma once
+
 #define BACKSPACE           0x8
 #define DEL                 0x7f
 

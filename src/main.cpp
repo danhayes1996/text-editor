@@ -58,9 +58,24 @@ void doInput(int c)
 				{
 		            if(y != 0)
 					{
-						arr.erase(arr.begin() + y);
-		                y--;
-		                x = arr[y].length();
+						if(arr[y].length() == 0) //if empty line
+						{
+							arr.erase(arr.begin() + y);
+							x = arr[y - 1].length();
+						} 
+						else 
+						{ //delete at x = 0 when there are characters remaining on the current line
+							int remainingSpace = MAX_STRING_LEN - arr[y - 1].length();
+							int toMove = std::min(remainingSpace, (int) arr[y].length());
+							arr[y-1] += arr[y].substr(0, toMove);
+							
+							if(toMove == arr[y].length()) //if remaining chars will all fit in the line above
+								arr.erase(arr.begin() + y);
+							else
+								arr[y].erase(0, toMove);
+							x = arr[y - 1].length() - toMove;
+						}
+						y--;
 		            }
 		        } 
 				else 
@@ -117,7 +132,7 @@ void doMoveCursor()
 	}
 }
 
-void doControlKey( int c) 
+void doControlKey(int c) 
 {
 	switch(c)
 	{
@@ -126,9 +141,11 @@ void doControlKey( int c)
 			break;
 		case NEW_LINE:
 		case CARRIAGE_RETURN: //for some reason these count as control keys
-			y++;
+			//move characters after x to new line
+			arr.insert(arr.begin() + y + 1, arr[y].substr(x));
+			arr[y].erase(x);
 			x = 0;
-			arr.push_back(std::string());
+			y++;
 			break;
 		case CTRL('c'):
 			running = false;

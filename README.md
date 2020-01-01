@@ -1,2 +1,2 @@
 compile with (from project root folder):
-g++ main.cpp -o bin/textEditor -lncurses
+g++ src/main.cpp -o bin/textEditor -lncurses

@@ -5,6 +5,9 @@
 
 #include "keys.h"
 
+#define X_OFFSET 2
+#define Y_OFFSET 1
+
 Screen::Screen()
     : m_Cursor({0, 0}), m_Lines(std::vector<std::string*>())
 {
@@ -49,18 +52,12 @@ void Screen::pollInputs()
             case KEY_DC:
                 //do delete key
                 break;
+            case KEY_RESIZE:
+                break;
 			default:
 				insertChar(c);
 		}
 	}
-}
-
-void Screen::render()
-{
-    clear();
-    for(int i = 0; i < m_Lines.size(); i++)
-        printw("%s\n", m_Lines[i]->c_str());
-	move(m_Cursor.y, m_Cursor.x);
 }
 
 void Screen::doBackspace() 
@@ -99,7 +96,7 @@ void Screen::doMoveCursor(int c)
 {
 	switch(c)
 	{
-		case KEY_UP: //up arrow 
+		case KEY_UP:
 			if(m_Cursor.y != 0) 
 			{
 				m_Cursor.y--;
@@ -107,7 +104,7 @@ void Screen::doMoveCursor(int c)
 			}
 			else m_Cursor.x = 0;
 			break;
-		case KEY_DOWN: //down arrow 
+		case KEY_DOWN: 
 			if(m_Cursor.y < m_Lines.size() - 1)
 			{ 
 				m_Cursor.y++;
@@ -115,7 +112,7 @@ void Screen::doMoveCursor(int c)
 			} 
 			else m_Cursor.x = m_Lines[m_Cursor.y]->length();
 			break;
-		case KEY_RIGHT: //right arrow 
+		case KEY_RIGHT: 
 			if(m_Cursor.x < m_Lines[m_Cursor.y]->length())
 				m_Cursor.x++;
 			else if(m_Cursor.y != m_Lines.size() - 1) 
@@ -124,7 +121,7 @@ void Screen::doMoveCursor(int c)
 				m_Cursor.x = 0;
 			}
 			break;
-		case KEY_LEFT: //left arrow 
+		case KEY_LEFT: 
 			if(m_Cursor.x != 0) 
 				m_Cursor.x--;
 			else if(m_Cursor.y != 0) 
@@ -164,4 +161,17 @@ void Screen::insertChar(int c)
 		m_Lines[m_Cursor.y]->insert(m_Cursor.x, 1, (char)c);
 		m_Cursor.x++;
 	}
+}
+
+void Screen::render()
+{
+    clear();
+
+    for(int i = 0; i < m_Lines.size(); i++)
+        mvprintw(Y_OFFSET + i, X_OFFSET, "%s\n", m_Lines[i]->c_str());
+}
+
+void Screen::drawCursor()
+{
+	move(Y_OFFSET + m_Cursor.y, X_OFFSET + m_Cursor.x);
 }

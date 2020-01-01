@@ -18,6 +18,7 @@ class Screen
         void pollInputs();
 
         void render();
+        void drawCursor();
 
         inline bool hasCtrlC() { return m_CtrlC; }
 
@@ -26,6 +27,7 @@ class Screen
         void doMoveCursor(int c);
         void doControlKey(int c);
         void insertChar(int c);
+        void drawHUD();
 
     private:
         Cursor m_Cursor;

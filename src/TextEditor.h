@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Screen.h"
+#include "Hud.h"
 
 class TextEditor 
 {
@@ -13,4 +14,5 @@ class TextEditor
     private:
         bool m_Running;
         Screen* m_Screen;
+        HUD* m_Hud;
 };

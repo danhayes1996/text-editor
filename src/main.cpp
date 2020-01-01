@@ -1,58 +1,66 @@
 #include <ncurses.h>
 
-#include <vector>
-#include <string>
 #include <algorithm> 
+#include <string>
+#include <vector>
+
+#include "keys.h"
 
 #define MAX_STRING_LEN 5
-#define ESCAPE_CHAR '\033'
-#define CTRL(c) ((c) & 037)
 
 std::vector<std::string> arr;
 int x = 0, y = 0;
+bool running = true;
 
 void doMoveCursor();
 void doControlKey(int c);
 void doInput(int c);
 void render();
+void insertChar(int c);
 
 int main()
 {
     arr.push_back(std::string());
     initscr();
     noecho();
+	raw(); /* stops CTRL + C, etc */
  
     int c = -1;
-    while((c = getch()) != 'X')
+    while(running)
     {
+		c = getch();
 		doInput(c);
         render();
     }
 
-    endwin();
-	
+    endwin();	
     return 0;
 }
 
 void doInput(int c)
 {
 
-	if(c == ESCAPE_CHAR)
+	if(c == ESCAPE_CHAR) //only works outside of switch
 	{
 		doMoveCursor();
 	} 
+	else if (c == CTRL(c)) //cant be put into switch
+	{
+		doControlKey(c);
+	}
 	else 
 	{
 		switch(c) 
 		{
-		    case 8:
-		    case 127:
+		    case BACKSPACE:
+		    case DEL:
 		        if(x == 0) 
 				{
 		            if(y != 0)
 					{
-		                x = 5;
+						arr.erase(arr.begin() + y);
 		                y--;
+		                x = arr[y].length();
 		            }
 		        } 
 				else 
@@ -60,31 +68,18 @@ void doInput(int c)
 		            arr[y].erase(--x, 1);
 		        }
 		        break;
-		    case 10:
-		    case 13:
-		        y++;
-				x = 0;
-				arr.push_back(std::string());
-		        break;
-			/*case CTRL('r'):
-				doControlKey(c);
-				break;
-			*/
-		    default:
-				if(x < MAX_STRING_LEN)
-				{
-					arr[y].insert(x, 1, (char)c);
-					x++;// = x + 1 == MAX_STRING_LEN ? x : x + 1;
-				}
+			default:
+				insertChar(c);
 		}
 	}
 }
 
-//arrow key form '\033' then '[' then ('A' || 'B' || 'C' || 'D')
+//arrow key form '0x1b' then '[' then ('A' || 'B' || 'C' || 'D')
 void doMoveCursor() 
 {
 	getch(); //skip '[' character
-	switch(getch()) {
+	switch(getch()) 
+	{
 		case 'A' : //up arrow 
 			if(y != 0) 
 			{
@@ -122,8 +117,32 @@ void doMoveCursor()
 	}
 }
 
-void doControlKey(int c) 
+void doControlKey( int c) 
 {
+	switch(c)
+	{
+		case TAB:
+			insertChar(' ');
+			break;
+		case NEW_LINE:
+		case CARRIAGE_RETURN: //for some reason these count as control keys
+			y++;
+			x = 0;
+			arr.push_back(std::string());
+			break;
+		case CTRL('c'):
+			running = false;
+			break;
+	}
+}
+
+void insertChar(int c) 
+{
+	if(arr[y].length() < MAX_STRING_LEN)
+	{
+		arr[y].insert(x, 1, (char)c);
+		x++;// = x + 1 == MAX_STRING_LEN ? x : x + 1;
+	}
 }
 
 void render()

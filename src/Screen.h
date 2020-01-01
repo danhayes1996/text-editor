@@ -22,13 +22,14 @@ class Screen
         inline bool hasCtrlC() { return m_CtrlC; }
 
     private:
+        void doBackspace();
         void doMoveCursor();
         void doControlKey(int c);
         void insertChar(int c);
 
     private:
         Cursor m_Cursor;
-        std::vector<std::string> m_Lines;
+        std::vector<std::string*> m_Lines;
 
         //flags
         bool m_CtrlC = false;

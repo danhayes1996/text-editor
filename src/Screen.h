@@ -23,7 +23,7 @@ class Screen
 
     private:
         void doBackspace();
-        void doMoveCursor();
+        void doMoveCursor(int c);
         void doControlKey(int c);
         void insertChar(int c);
 

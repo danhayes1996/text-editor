@@ -14,6 +14,8 @@ Screen::Screen()
 Screen::~Screen()
 {
     endwin();
+    for(auto str : m_Lines)
+        delete str;
 }
 
 void Screen::init()
@@ -21,16 +23,13 @@ void Screen::init()
     initscr();
     noecho();
 	raw(); /* stops CTRL + C, etc */
+    keypad(stdscr, true); /* Recognise arrow keys */
 }
 
 void Screen::pollInputs()
 {
     int c = getch();
-    if(c == ESCAPE_CHAR) //only works outside of switch
-	{
-		doMoveCursor();
-	} 
-	else if (c == CTRL(c)) //cant be put into switch
+	if (c == CTRL(c)) //cant be put into switch
 	{
 		doControlKey(c);
 	}
@@ -38,9 +37,17 @@ void Screen::pollInputs()
 	{
 		switch(c) 
 		{
-            case BACKSPACE:
-		    case DEL:
+            case KEY_LEFT:
+            case KEY_RIGHT:
+            case KEY_UP:
+            case KEY_DOWN:
+                doMoveCursor(c);
+                break;
+            case KEY_BACKSPACE:
 		        doBackspace();
+                break;
+            case KEY_DC:
+                //do delete key
                 break;
 			default:
 				insertChar(c);
@@ -88,13 +95,11 @@ void Screen::doBackspace()
     }
 }
 
-//arrow key form '0x1b' then '[' then ('A' || 'B' || 'C' || 'D')
-void Screen::doMoveCursor()
+void Screen::doMoveCursor(int c)
 {
-    getch(); //skip '[' character
-	switch(getch()) 
+	switch(c)
 	{
-		case 'A' : //up arrow 
+		case KEY_UP: //up arrow 
 			if(m_Cursor.y != 0) 
 			{
 				m_Cursor.y--;
@@ -102,7 +107,7 @@ void Screen::doMoveCursor()
 			}
 			else m_Cursor.x = 0;
 			break;
-		case 'B' : //down arrow 
+		case KEY_DOWN: //down arrow 
 			if(m_Cursor.y < m_Lines.size() - 1)
 			{ 
 				m_Cursor.y++;
@@ -110,7 +115,7 @@ void Screen::doMoveCursor()
 			} 
 			else m_Cursor.x = m_Lines[m_Cursor.y]->length();
 			break;
-		case 'C' : //right arrow 
+		case KEY_RIGHT: //right arrow 
 			if(m_Cursor.x < m_Lines[m_Cursor.y]->length())
 				m_Cursor.x++;
 			else if(m_Cursor.y != m_Lines.size() - 1) 
@@ -119,7 +124,7 @@ void Screen::doMoveCursor()
 				m_Cursor.x = 0;
 			}
 			break;
-		case 'D' : //left arrow 
+		case KEY_LEFT: //left arrow 
 			if(m_Cursor.x != 0) 
 				m_Cursor.x--;
 			else if(m_Cursor.y != 0) 
@@ -138,14 +143,14 @@ void Screen::doControlKey(int c)
 		case TAB:
 			insertChar(' ');
 			break;
-		case NEW_LINE:
-		case CARRIAGE_RETURN: //for some reason these count as control keys
-			//move characters after x to new line
-			m_Lines.insert(m_Lines.begin() + m_Cursor.y + 1, new std::string(*m_Lines[m_Cursor.y], m_Cursor.x));
-			m_Lines[m_Cursor.y]->erase(m_Cursor.x);
-			m_Cursor.x = 0;
-			m_Cursor.y++;
-			break;
+        case NEW_LINE:
+        case CARRIAGE_RETURN: //for some reason these count as control keys
+                //move characters after x to new line
+                m_Lines.insert(m_Lines.begin() + m_Cursor.y + 1, new std::string(*m_Lines[m_Cursor.y], m_Cursor.x));
+                m_Lines[m_Cursor.y]->erase(m_Cursor.x);
+                m_Cursor.x = 0;
+                m_Cursor.y++;
+                break;
 		case CTRL('c'):
 			m_CtrlC = true;
 			break;
